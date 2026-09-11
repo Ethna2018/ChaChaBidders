@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ChaCha Bidders Admin Panel</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background: darkblue; color: white; padding: 10px; text-align: center; }
+    .section { border: 2px solid #444; margin: 20px; padding: 15px; }
+    h2 { margin-top: 0; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    .pending { color: orange; }
+    .verified { color: green; }
+    button { margin: 5px; padding: 6px 10px; }
+    input, textarea { width: 100%; padding: 6px; margin: 5px 0; }
+    @media (max-width: 768px) {
+      .section { margin: 10px; padding: 10px; }
+      table, th, td { font-size: 0.9em; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Admin Panel - ChaCha Bidders</h1>
+  </header>
+
+  <!-- General Advert Management -->
+  <div class="section">
+    <h2>General Advert Management</h2>
+    <textarea id="advertInput" rows="4" placeholder="Enter advert text..."></textarea>
+    <button id="uploadAdvertBtn">Upload Advert</button>
+  </div>
+
+  <!-- Video Upload Management -->
+  <div class="section">
+    <h2>Video Upload</h2>
+    <input id="videoInput" type="file" accept="video/mp4,video/webm">
+    <button id="uploadVideoBtn">Upload Video</button>
+    <p>Uploaded video will replace the sample video in the frontend.</p>
+  </div>
+
+  <!-- Bidder Control -->
+  <div class="section">
+    <h2>Bidder Control</h2>
+    <button id="enableHighBtn">Enable High Auction Bidders</button>
+    <button id="disableHighBtn">Disable High Auction Bidders</button>
+    <button id="enableLowBtn">Enable Low Auction Bidders</button>
+    <button id="disableLowBtn">Disable Low Auction Bidders</button>
+  </div>
+  <!-- Content Upload for High Auction -->
+  <div class="section">
+    <h2>High Auction Content Management</h2>
+    <input id="highSpecInput" type="text" placeholder="Enter specification">
+    <button id="uploadHighSpecBtn">Upload Specification</button>
+
+    <input id="highStatusInput" type="text" placeholder="Enter status">
+    <button id="uploadHighStatusBtn">Upload Status</button>
+
+    <input id="highCommissionInput" type="text" placeholder="Enter commission">
+    <button id="uploadHighCommissionBtn">Upload Commission</button>
+
+    <input id="highMarketInput" type="text" placeholder="Enter market price">
+    <button id="uploadHighMarketBtn">Upload Market Price</button>
+
+    <input id="highMinPriceInput" type="text" placeholder="Enter minimum price">
+    <button id="uploadHighMinPriceBtn">Upload Minimum Price</button>
+
+    <input id="highImageInput" type="file" accept="image/*">
+    <button id="uploadHighImageBtn">Upload Item Image</button>
+  </div>
+
+  <!-- Content Upload for Low Auction -->
+  <div class="section">
+    <h2>Low Auction Content Management</h2>
+    <input id="lowSpecInput" type="text" placeholder="Enter specification">
+    <button id="uploadLowSpecBtn">Upload Specification</button>
+
+    <input id="lowStatusInput" type="text" placeholder="Enter status">
+    <button id="uploadLowStatusBtn">Upload Status</button>
+
+    <input id="lowCommissionInput" type="text" placeholder="Enter commission">
+    <button id="uploadLowCommissionBtn">Upload Commission</button>
+
+    <input id="lowMarketInput" type="text" placeholder="Enter market price">
+    <button id="uploadLowMarketBtn">Upload Market Price</button>
+
+    <input id="lowMinPriceInput" type="text" placeholder="Enter minimum price">
+    <button id="uploadLowMinPriceBtn">Upload Minimum Price</button>
+
+    <input id="lowImageInput" type="file" accept="image/*">
+    <button id="uploadLowImageBtn">Upload Item Image</button>
+  </div>
+  <!-- Auction Regulation -->
+  <div class="section">
+    <h2>Auction Regulation</h2>
+    <h3>High Auction</h3>
+    <button id="pauseHighBtn">Pause High Auction</button>
+    <button id="extendHighBtn">Extend High Auction</button>
+    <button id="resetHighBtn">Reset High Auction</button>
+    <input id="highTimerInput" type="number" placeholder="Set timer (minutes)">
+    <button id="setHighTimerBtn">Set High Timer</button>
+    <button id="resetHighTimerBtn">Reset High Timer</button>
+
+    <h3>Low Auction</h3>
+    <button id="pauseLowBtn">Pause Low Auction</button>
+    <button id="extendLowBtn">Extend Low Auction</button>
+    <button id="resetLowBtn">Reset Low Auction</button>
+    <input id="lowTimerInput" type="number" placeholder="Set timer (minutes)">
+    <button id="setLowTimerBtn">Set Low Timer</button>
+    <button id="resetLowTimerBtn">Reset Low Timer</button>
+  </div>
+
+  <!-- Dashboard Summary -->
+  <div class="section">
+    <h2>Dashboard Summary</h2>
+    <div id="dashboardContent">No data yet...</div>
+  </div>
+
+  <!-- Notifications -->
+  <div class="section">
+    <h2>Notifications</h2>
+    <div id="notificationsBox">No notifications yet...</div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // General Advert
+    document.getElementById("uploadAdvertBtn").addEventListener("click", () => {
+      const advert = document.getElementById("advertInput").value;
+      fetch("/api/uploadAdvert", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ advert })
+      }).then(() => alert("Advert uploaded successfully"));
+    });
+
+    // Video Upload
+    document.getElementById("uploadVideoBtn").addEventListener("click", () => {
+      const file = document.getElementById("videoInput").files[0];
+      if (!file) return alert("Please select a video file");
+      const formData = new FormData();
+      formData.append("video", file);
+      fetch("/api/uploadVideo", { method: "POST", body: formData })
+        .then(() => alert("Video uploaded successfully"));
+    });
+
+    // Example: High Spec Upload
+    document.getElementById("uploadHighSpecBtn").addEventListener("click", () => {
+      const spec = document.getElementById("highSpecInput").value;
+      fetch("/api/uploadHighSpec", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ spec })
+      }).then(() => alert("High specification uploaded"));
+    });
+
+    // Similarly wire other upload buttons (status, commission, etc.)
+
+    // Auction Regulation
+    document.getElementById("pauseHighBtn").addEventListener("click", () => {
+      fetch("/api/pauseHighAuction", { method: "POST" });
+    });
+    document.getElementById("extendHighBtn").addEventListener("click", () => {
+      fetch("/api/extendHighAuction", { method: "POST" });
+    });
+    document.getElementById("resetHighBtn").addEventListener("click", () => {
+      fetch("/api/resetHighAuction", { method: "POST" });
+    });
+    document.getElementById("setHighTimerBtn").addEventListener("click", () => {
+      const minutes = document.getElementById("highTimerInput").value;
+      fetch("/api/setHighTimer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minutes })
+      });
+    });
+    document.getElementById("resetHighTimerBtn").addEventListener("click", () => {
+      fetch("/api/resetHighTimer", { method: "POST" });
+    });
+
+    // Low Auction regulation
+    document.getElementById("pauseLowBtn").addEventListener("click", () => {
+      fetch("/api/pauseLowAuction", { method: "POST" });
+    });
+    document.getElementById("extendLowBtn").addEventListener("click", () => {
+      fetch("/api/extendLowAuction", { method: "POST" });
+    });
+    document.getElementById("resetLowBtn").addEventListener("click", () => {
+      fetch("/api/resetLowAuction", { method: "POST" });
+    });
+    document.getElementById("setLowTimerBtn").addEventListener("click", () => {
+      const minutes = document.getElementById("lowTimerInput").value;
+      fetch("/api/setLowTimer", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ minutes })
+      });
+    });
+    document.getElementById("resetLowTimerBtn").addEventListener("click", () => {
+      fetch("/api/resetLowTimer", { method: "POST" });
+    });
+
+    // Socket listeners for dashboard and notifications
+    socket.on("updateDashboard", (data) => {
+      document.getElementById("dashboardContent").innerText = JSON.stringify(data, null, 2);
+    });
+    socket.on("notification", (msg) => {
+      const box = document.getElementById("notificationsBox");
+      box.innerHTML += "<div>" + msg + "</div>";
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ChaCha Bidders Login</title>
+  <style>
+    body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+    .loginBox { border: 2px solid #444; padding: 20px; width: 300px; }
+    input { width: 100%; padding: 8px; margin: 10px 0; }
+    button { width: 100%; padding: 10px; }
+  </style>
+</head>
+<body>
+  <div class="loginBox">
+    <h2>Login</h2>
+    <input id="nameInput" type="text" placeholder="Enter your name">
+    <input id="phoneInput" type="text" placeholder="Enter your phone">
+    <button id="loginBtn">Login</button>
+  </div>
+
+  <script>
+    document.getElementById("loginBtn").addEventListener("click", () => {
+      const name = document.getElementById("nameInput").value;
+      const phone = document.getElementById("phoneInput").value;
+      fetch("/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name, phone })
+      })
+      .then(res => res.json())
+      .then(data => {
+        alert("Logged in as " + data.name);
+        localStorage.setItem("userId", data.id);
+        window.location.href = "/index.html";
+      });
+    });
+  </script>
+</body>
+</html>

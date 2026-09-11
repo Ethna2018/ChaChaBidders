@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ChaCha Bidders Auction</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+    header { background: darkblue; color: white; padding: 10px; text-align: center; }
+    nav { background: #333; color: white; padding: 10px; display: flex; justify-content: space-around; }
+    nav select { padding: 5px; }
+    main { display: flex; flex-wrap: wrap; }
+    .leftSide { flex: 1; min-width: 480px; padding: 20px; }
+    .rightSide { flex: 1; min-width: 480px; padding: 20px; }
+    video { width: 100%; max-width: 480px; height: 350px; border: 2px solid #444; } /* fixed height */
+    .advertBox { margin-top: 20px; border: 2px solid #444; padding: 15px; min-height: 200px; font-size: 1.1em; }
+    .panel { border: 2px solid #444; margin: 20px 0; padding: 15px; }
+    .auctionFlex { display: flex; flex-wrap: wrap; gap: 20px; }
+    .auctionImage { flex: 1; min-width: 250px; }
+    .auctionDetails { flex: 1; min-width: 250px; display: flex; flex-direction: column; gap: 10px; }
+    .infoBox { border: 1px solid #ccc; padding: 10px; background: #f9f9f9; }
+    .timer { font-weight: bold; margin-top: 10px; }
+    .winnerBox { margin-top: 10px; font-weight: bold; color: green; }
+    .payment { margin: 5px 0; }
+    button { margin-top: 10px; padding: 8px 12px; }
+    #chachaBtn { background: yellow; color: black; font-weight: bold; font-size: 1.2em; } /* highlighted button */
+    @media (max-width: 768px) {
+      main { flex-direction: column; }
+      .auctionFlex { flex-direction: column; }
+      video { max-width: 100%; }
+      .leftSide, .rightSide { min-width: 100%; }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 id="welcome">Welcome to ChaCha Bidders</h1>
+  </header>
+  <nav>
+    <select id="language">
+      <option value="english">English</option>
+      <option value="amharic">Amharic</option>
+      <option value="oromifa">Oromifa</option>
+      <option value="somali">Somali</option>
+      <option value="tigrigna">Tigrigna</option>
+    </select>
+    <div id="aboutContent">About Us</div>
+    <div id="rulesContent">Auction Rules</div>
+    <div id="benefitsContent">Benefits</div>
+  </nav>
+  <main>
+    <div class="leftSide">
+      <video id="auctionVideo" controls>
+        <source src="sample.mp4" type="video/mp4">
+        Your browser does not support video.
+      </video>
+      <div class="advertBox" id="advertBox">Advert will appear here...</div>
+    </div>
+    <div class="rightSide">
+      <button id="chachaBtn">Let's Go ChaCha</button>
+
+      <!-- Unique Low Auction Panel (comes first) -->
+      <div id="uniqueLowPanel" class="panel" style="display:none;">
+        <h2>Unique Low Auction</h2>
+        <div class="auctionFlex">
+          <div class="auctionImage">
+            <img id="lowItemImage" src="" alt="Unique Low Auction Item" style="max-width:100%; border:2px solid gray;">
+          </div>
+          <div class="auctionDetails">
+            <div class="infoBox" id="lowSpec">Specification: </div>
+            <div class="infoBox" id="lowStatus">Status: </div>
+            <div class="infoBox" id="lowCommission">Commission: </div>
+          </div>
+        </div>
+        <div class="infoBox">
+          <h3>Bid the Item</h3>
+          <input id="lowBidInput" type="number" placeholder="Enter your bid">
+          <button id="lowBidBtn">Bid</button>
+          <div id="lowPayments" style="display:none;">
+            <h4>Payment Options</h4>
+            <div class="payment">E-Birr: +251911798620</div>
+            <div class="payment">Telebirr: +251911798620</div>
+            <div class="payment">CBE: 1000106346333</div>
+            <div class="payment">Bank of Abyssinia: 62992891</div>
+            <button id="lowProvideBtn">Provide Price</button>
+          </div>
+        </div>
+        <div class="timer" id="lowTimer">Time Left: 30:00</div>
+        <div class="winnerBox" id="lowWinnerBox">Winner: None</div>
+      </div>
+      <!-- ChaCha High Auction Panel (comes second) -->
+      <div id="chachaHighPanel" class="panel" style="display:none;">
+        <h2>ChaCha High Auction</h2>
+        <div class="auctionFlex">
+          <div class="auctionImage">
+            <img id="highItemImage" src="" alt="ChaCha High Auction Item" style="max-width:100%; border:2px solid gray;">
+          </div>
+          <div class="auctionDetails">
+            <div class="infoBox" id="highSpec">Specification: </div>
+            <div class="infoBox" id="highStatus">Status: </div>
+            <div class="infoBox" id="highCommission">Commission: </div>
+          </div>
+        </div>
+        <div class="infoBox">
+          <h3>Bid the Item</h3>
+          <input id="highBidInput" type="number" placeholder="Enter your bid">
+          <button id="highBidBtn">Bid</button>
+          <div id="highPayments" style="display:none;">
+            <h4>Payment Options</h4>
+            <div class="payment">E-Birr: +251911798620</div>
+            <div class="payment">Telebirr: +251911798620</div>
+            <div class="payment">CBE: 1000106346333</div>
+            <div class="payment">Bank of Abyssinia: 62992891</div>
+            <button id="highProvideBtn">Provide Price</button>
+          </div>
+        </div>
+        <div class="timer" id="highTimer">Time Left: 30:00</div>
+        <div class="winnerBox" id="highWinnerBox">Winner: None</div>
+      </div>
+    </div>
+  </main>
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+    const socket = io();
+
+    // Show auction panels when button clicked
+    document.getElementById("chachaBtn").addEventListener("click", () => {
+      document.getElementById("uniqueLowPanel").style.display = "block";
+      document.getElementById("chachaHighPanel").style.display = "block";
+    });
+
+    // Unique Low Auction bid
+    document.getElementById("lowBidBtn").addEventListener("click", () => {
+      const bid = parseInt(document.getElementById("lowBidInput").value);
+      if (!bid) return alert("Enter a bid");
+      document.getElementById("lowPayments").style.display = "block";
+      socket.emit("placeBid", { bidType: "unique_low", bid });
+    });
+    // Low Auction Payment
+document.getElementById("lowProvideBtn").addEventListener("click", () => {
+  const userId = localStorage.getItem("userId");
+  const bid = parseInt(document.getElementById("lowBidInput").value);
+  fetch("/api/payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, auctionId: 2, amount: bid, method: "Telebirr" })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("Low bid payment verified!");
+  });
+});
+    // ChaCha High Auction bid
+    document.getElementById("highBidBtn").addEventListener("click", () => {
+      const bid = parseInt(document.getElementById("highBidInput").value);
+      if (!bid) return alert("Enter a bid");
+      document.getElementById("highPayments").style.display = "block";
+      socket.emit("placeBid", { bidType: "high", bid });
+    });
+    // High Auction Payment
+document.getElementById("highProvideBtn").addEventListener("click", () => {
+  const userId = localStorage.getItem("userId");
+  const bid = parseInt(document.getElementById("highBidInput").value);
+  fetch("/api/payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, auctionId: 1, amount: bid, method: "Telebirr" })
+  })
+  .then(res => res.json())
+  .then(data => {
+    alert("High bid payment verified!");
+  });
+});
+    // Socket listeners for admin updates
+    socket.on("updateAdvert", val => { document.getElementById("advertBox").innerText = val; });
+
+    socket.on("updateHighSpec", val => { document.getElementById("highSpec").innerText = "Specification: " + val; });
+    socket.on("updateHighStatus", val => { document.getElementById("highStatus").innerText = "Status: " + val; });
+    socket.on("updateHighCommission", val => { document.getElementById("highCommission").innerText = "Commission: " + val; });
+    socket.on("updateHighMarket", val => { /* optional display */ });
+    socket.on("updateHighMinPrice", val => { /* optional display */ });
+    socket.on("updateHighImage", val => { document.getElementById("highItemImage").src = val; });
+
+    socket.on("updateLowSpec", val => { document.getElementById("lowSpec").innerText = "Specification: " + val; });
+    socket.on("updateLowStatus", val => { document.getElementById("lowStatus").innerText = "Status: " + val; });
+    socket.on("updateLowCommission", val => { document.getElementById("lowCommission").innerText = "Commission: " + val; });
+    socket.on("updateLowMarket", val => { /* optional display */ });
+    socket.on("updateLowMinPrice", val => { /* optional display */ });
+    socket.on("updateLowImage", val => { document.getElementById("lowItemImage").src = val; });
+
+    // Socket listeners for bids
+    socket.on("updateHighBid", (val) => {
+      document.getElementById("highWinnerBox").innerText = "Highest Bid: Pending Approval";
+    });
+
+    // Hide lowest unique bid until results are announced
+    socket.on("updateLowBid", () => {
+      document.getElementById("lowWinnerBox").innerText = "Lowest Unique Bid: Pending Approval";
+    });
+
+    // Results announcement
+    socket.on("updateResults", (data) => {
+      if (data.highWinner) {
+        document.getElementById("highWinnerBox").innerText = "Winner: " + data.highWinner.name + " (ETB " + data.highWinner.bid + ")";
+      }
+      if (data.lowWinner) {
+        document.getElementById("lowWinnerBox").innerText = "Winner: " + data.lowWinner.name + " (ETB " + data.lowWinner.bid + ")";
+      }
+    });
+
+    // Language switching (simplified demo)
+    document.getElementById("language").addEventListener("change", (e) => {
+      const lang = e.target.value;
+      if (lang === "amharic") {
+        document.getElementById("welcome").innerText = "እንኳን ወደ ቻቻ ቢደርስ በደህና መጡ";
+      } else {
+        document.getElementById("welcome").innerText = "Welcome to ChaCha Bidders";
+      }
+    });
+  </script>
+</body>
+</html>
