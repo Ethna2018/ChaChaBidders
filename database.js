@@ -1,5 +1,16 @@
+const path = require("path");
 const sqlite3 = require("sqlite3").verbose();
-const db = new sqlite3.Database("/data/chacha.db");
+
+// Always use Render's writable /data folder
+const dbPath = path.join("/data", "chacha.db");
+
+const db = new sqlite3.Database(dbPath, (err) => {
+  if (err) {
+    console.error("Failed to open database:", err.message);
+  } else {
+    console.log("Connected to SQLite at", dbPath);
+  }
+});
 
 db.serialize(() => {
   db.run("CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY AUTOINCREMENT, name TEXT, phone TEXT, role TEXT)");
